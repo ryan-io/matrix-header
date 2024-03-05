@@ -46,6 +46,18 @@ struct matrix {
 		return m_height;
 	}
 
+	matrix rotate90() {
+		matrix output = transpose();
+		output.reverse();
+		return output;
+	}
+
+	void rotate90InPlaceSq()
+	{
+		transposeInPlaceSq();
+		reverse();
+	}
+
 	matrix transpose() {
 		matrix output = matrix<int>(m_height, m_length);
 
@@ -98,7 +110,7 @@ struct matrix {
 
 	explicit matrix(const int length, const int height) {
 		m_v2d = std::vector<std::vector<T>>(height);
-		
+
 		for (int z = 0; z < height; ++z) {
 			m_v2d[z] = std::vector<T>(length);
 		}
@@ -109,6 +121,20 @@ struct matrix {
 	}
 
 private:
+	void reverse() {
+		for (int i = 0; i < m_height; ++i) {
+			int j = 0, k = m_length - 1;
+			std::vector<T>& row = m_v2d[i];
+
+			for (int l = 0; j < k; l++) {	// l < m_height/2 works also
+				T jVal = row[j], kVal = row[k];
+				row[j] = kVal; row[k] = jVal;
+
+				k--; j++;
+			}
+		}
+	}
+
 	void ValidateIndex(const int rowIndex, const int colIndex) const {
 		if (rowIndex >= m_height)
 			throw std::out_of_range("Row index cannot be greater than the height of the matrix");
