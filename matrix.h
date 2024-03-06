@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -52,8 +53,7 @@ struct matrix {
 		return output;
 	}
 
-	void rotate90InPlaceSq()
-	{
+	void rotate90InPlaceSq() {
 		transposeInPlaceSq();
 		reverse();
 	}
@@ -109,6 +109,8 @@ struct matrix {
 	}
 
 	explicit matrix(const int length, const int height) {
+		assert(length > 0 && height > 0, "Length or height were 0 or less than 0");
+
 		m_v2d = std::vector<std::vector<T>>(height);
 
 		for (int z = 0; z < height; ++z) {
@@ -136,17 +138,10 @@ private:
 	}
 
 	void ValidateIndex(const int rowIndex, const int colIndex) const {
-		if (rowIndex >= m_height)
-			throw std::out_of_range("Row index cannot be greater than the height of the matrix");
-
-		if (colIndex >= m_length)
-			throw std::out_of_range("Column index cannot be greater than the length of the matrix");
-
-		if (rowIndex < 0)
-			throw std::out_of_range("Row index is less than zero");
-
-		if (colIndex < 0)
-			throw std::out_of_range("Column index is less than zero");
+		assert(rowIndex < m_height, "Row index cannot be greater than the height of the matrix");
+		assert(colIndex < m_length, "Column index cannot be greater than the length of the matrix");
+		assert(rowIndex >= 0, "Row index is less than zero");
+		assert(colIndex >= 0, "Column index is less than zero");
 	}
 
 	std::vector<std::vector<T>> m_v2d{};
