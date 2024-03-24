@@ -6,190 +6,146 @@
 
 template <typename T>
 struct matrix {
-    [[nodiscard]] const T& get(const int rowIndex, const int colIndex) const {
-        ValidateIndex(rowIndex, colIndex);
-        return m_v2d.at(getIndex(rowIndex, colIndex));
-    }
+	const T& get(const int rowIndex, const int colIndex) const {
+		ValidateIndex(rowIndex, colIndex);
 
-    [[nodiscard]] T getValue(const int rowIndex, const int colIndex) {
-        ValidateIndex(rowIndex, colIndex);
-        return m_v2d[getIndex(rowIndex, colIndex)];
-    }
+		const std::vector<T>& row = m_v2d[rowIndex];
+		const T& col = row[colIndex];
 
-    void set(const int rowIndex, const int colIndex, T value) {
-        ValidateIndex(rowIndex, colIndex);
-        m_v2d[getIndex(rowIndex, colIndex)] = value;
-    }
+		return col;
+	}
 
-    void reverseInPlace() {
-        for (int iterator = 0; iterator < m_height; ++iterator) {
-            int j = 0, k = m_length - 1;
+	T getValue(const int rowIndex, const int colIndex) const {
+		ValidateIndex(rowIndex, colIndex);
 
-            for (int iterator2 = 0; j < k; ++iterator2) {
-                T jVal = get(iterator, j), kVal = get(iterator, k);
-                set(iterator, j, kVal);
-                set(iterator, k, jVal);
+		const std::vector<T>& row = m_v2d[rowIndex];
+		const T col = row[colIndex];
+		return col;
+	}
 
-                k--; j++;
-            }
-        }
-    }
+	void set(const int row, const int col, const T value) {
+		setByIndex(row - 1, col - 1, value);
+	}
 
-    std::vector<T> reverse() {
-        std::vector<T> output = std::vector<T>(m_count);
+	void setByIndex(const int rowIndex, const int colIndex, const T value) {
+		ValidateIndex(rowIndex, colIndex);
 
-        for (int iterator = 0; iterator < m_height; ++iterator) {
-            int j = 0, k = m_length - 1;
+		std::vector<T>& row = m_v2d.at(rowIndex);
+		T& col = row.at(colIndex);
+		col = value;
+	}
 
-            for (int iterator2 = 0; j < k; ++iterator2) {
-                T jVal = getValue(iterator, j),
-                    kVal = getValue(iterator, k);
+	int getCount() const {
+		return m_count;
+	}
 
-                output[getIndex(iterator, k)] = jVal;
-                output[getIndex(iterator, j)] = kVal;
+	int getLength() const {
+		return m_length;
+	}
 
-                k--; j++;
-            }
-        }
+	int getHeight() const {
+		return m_height;
+	}
 
-        return output;
-    }
+	matrix rotate90() {
+		matrix output = transpose();
+		output.reverse();
+		return output;
+	}
 
-    void printReverse() {
-        auto r = reverse();
+	void rotate90InPlaceSq() {
+		transposeInPlaceSq();
+		reverse();
+	}
 
-        for (int i = 0; i < m_count; ++i) {
-            const int row = i / m_length;
-            const int col = i % m_length;
+	matrix transpose() {
+		matrix output = matrix<int>(m_height, m_length);
 
-            std::cout << r[getIndex(row, col)];
+		for (int x = 0; x < m_height; ++x) {
+			for (int y = 0; y < m_length; y++) {
+				std::vector<T>& rowO = m_v2d[x];
+				T colO = rowO[y];
 
-            if (col == m_length - 1)
-                std::cout << '\n';
-            else
-                std::cout << "--";
-        }
-    }
+				std::vector<T>& rowN = output.m_v2d[y];
+				T& colN = rowN[x];
 
-    void print() const {
-        for (int i = 0; i < m_count; ++i) {
-            int row = i / m_length;
-            int col = i % m_length;
+				colN = colO;
+			}
+		}
 
-            std::cout << get(row, col);
+		return output;
+	}
 
-            if (col == m_length - 1)
-                std::cout << '\n';
-            else
-                std::cout << "--";
-        }
-    }
+	void transposeInPlaceSq() {
+		if (m_height != m_length)
+			throw std::exception("Matrix must be square to transpose in place.");
 
-    matrix transpose() {
-        matrix output = matrix<T>(m_length, m_height);
+		for (int x = 0; x < m_height; ++x) {
+			for (int y = x; y < m_length; y++) {
+				if (x == y)
+					continue;
 
-        for (int i = 0; i < m_count; ++i) {
-            int row = i / m_length;
-            int col = i % m_length;
+				T val1 = getValue(x, y);
+				T val2 = getValue(y, x);
 
+				setByIndex(x, y, val2);
+				setByIndex(y, x, val1);
+			}
+		}
+	}
 
-        }
-        for (int x = 0; x < m_height; ++x) {
-            for (int y = 0; y < m_length; y++) {
-                std::vector<T>& rowO = m_v2d[x];
-                T colO = rowO[y];
+	void print() const {
+		std::cout << '\n';
 
-                std::vector<T>& rowN = output.m_v2d[y];
-                T& colN = rowN[x];
+		for (int i = 0; i < m_height; ++i) {
+			for (int j = 0; j < m_length; j++) {
+				const T& v = get(i, j);
+				std::cout << std::to_string(v) << ' ';
 
-                colN = colO;
-            }
-        }
+				if (j == m_length - 1)
+					std::cout << '\n';
+			}
+		}
+	}
 
-        return output;
-    }
+	explicit matrix(const int length, const int height) {
+		assert(length > 0 && height > 0, "Length or height were 0 or less than 0");
 
-    /* void transposeInPlaceSq() {
-         if (m_height != m_length)
-             throw std::exception("Matrix must be square to transpose in place.");
+		m_v2d = std::vector<std::vector<T>>(height);
 
-         for (int x = 0; x < m_height; ++x) {
-             for (int y = x; y < m_length; y++) {
-                 if (x == y)
-                     continue;
+		for (int z = 0; z < height; ++z) {
+			m_v2d[z] = std::vector<T>(length);
+		}
 
-                 T val1 = getValue(x, y);
-                 T val2 = getValue(y, x);
-
-                 setByIndex(x, y, val2);
-                 setByIndex(y, x, val1);
-             }
-         }
-     }*/
-
-    [[nodiscard]] int getCount() const {
-        return m_count;
-    }
-
-    [[nodiscard]] int getLength() const {
-        return m_length;
-    }
-
-    [[nodiscard]] int getHeight() const {
-        return m_height;
-    }
-
-    /* matrix rotate90() {
-         matrix output = transpose();
-         output.reverse();
-         return output;
-     }
-
-     void rotate90InPlaceSq() {
-         transposeInPlaceSq();
-         reverse();
-     }
-
-
-
-
-     void print() const {
-         std::cout << '\n';
-
-         for (int i = 0; i < m_height; ++i) {
-             for (int j = 0; j < m_length; j++) {
-                 const T& v = get(i, j);
-                 std::cout << std::to_string(v) << ' ';
-
-                 if (j == m_length - 1)
-                     std::cout << '\n';
-             }
-         }
-     }*/
-
-    explicit matrix(const int length, const int height) {
-        assert(length > 0 && height > 0);
-
-        m_v2d = std::vector<T>(height * length);
-        m_count = length * height;
-        m_height = height;
-        m_length = length;
-    }
+		m_count = length * height;
+		m_height = height;
+		m_length = length;
+	}
 
 private:
-    [[nodiscard]] int getIndex(const int row, const int col) const {
-        return row * m_length + col;
-    }
+	void reverse() {
+		for (int i = 0; i < m_height; ++i) {
+			int j = 0, k = m_length - 1;
+			std::vector<T>& row = m_v2d[i];
 
-    void ValidateIndex(const int rowIndex, const int colIndex) const {
-        assert(rowIndex < m_height);
-        assert(colIndex < m_length);
-        assert(rowIndex >= 0);
-        assert(colIndex >= 0);
-    }
+			for (int l = 0; j < k; l++) {	// l < m_height/2 works also
+				T jVal = row[j], kVal = row[k];
+				row[j] = kVal; row[k] = jVal;
 
-    int m_count{};
-    int m_height{};
-    int m_length{};
-    std::vector<T> m_v2d{};
+				k--; j++;
+			}
+		}
+	}
+
+	void ValidateIndex(const int rowIndex, const int colIndex) const {
+		assert(rowIndex < m_height, "Row index cannot be greater than the height of the matrix");
+		assert(colIndex < m_length, "Column index cannot be greater than the length of the matrix");
+		assert(rowIndex >= 0, "Row index is less than zero");
+		assert(colIndex >= 0, "Column index is less than zero");
+	}
+
+	std::vector<std::vector<T>> m_v2d{};
+	int m_count{};
+	int m_height{};
+	int m_length{};
 };
